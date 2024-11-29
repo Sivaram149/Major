@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Weather App</title>
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-        <form class="weatherForm">
-            <input type="text" class="cityInput" placeholder="Enter the city">
-            <button type="submit">Get Weather</button>
-        </form>
-
-
-        <div class="card" style="display: none;">
-            
-
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="weatherforecast7days.css">
+    <title>Weather App</title>
+</head>
+<body>
+    <div class="container">
+        <div class="current-info">
+            <div class="date-container">
+                <div class="time" id="time"></div>
+                <div class="date" id="date"></div>
+            </div>
+            <div class="place-container">
+                <div class="time-zone" id="time-zone"></div>
+                <div id="country" class="country"></div>
+            </div>
+            <div id="current-weather-items" class="others"></div>
         </div>
-        <script src="weatherforecast7days.js"></script>
-    </body>
+    </div>
+
+    <div class="future-forecast">
+        <div id="current-temp" class="today"></div>
+        <div id="weather-forecast" class="weather-forecast"></div>
+    </div>
+
+    <script src="weatherforecast7days.js"></script>
+</body>
 </html>
-            <!--<h1 class="cityDisplay">Miami</h1>
-            <p class="temperatureDisplay">90°F</p><!--Alt + 0176-->
-            <!--<p class="humidityDisplay">Humidity: 75%</p>
-            <p class="descDisplay">Clear skies</p>
-            <p class="weatherEmoji">🌞</p>
-            <p class="errorDisplay">Please enter the city</p>-->
