@@ -1,105 +1,112 @@
-const timeEl = document.getElementById('time');
-const dateEl = document.getElementById('date');
-const currentWeatherItemsEl = document.getElementById('current-weather-items');
-const timezone = document.getElementById('time-zone');
-const countryEl = document.getElementById('country');
-const weatherForecastEl = document.getElementById('weather-forecast');
-const currentTempEl = document.getElementById('current-temp');
+//WEATHER APP
+//https://openweathermap.org ---->api
 
+//we are not working with id's, we are working with classes so we use queryselector (or) queryselectorAll
 
-const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const weatherForm = document.querySelector(".weatherForm");
+const cityInput = document.querySelector(".cityInput");
+const card = document.querySelector(".card");
+const apikey = "fa02e2d94562824a4c88f29d6753d27b";
 
-const API_KEY ='49cc8c821cd2aff9af04c9f98c36eb74';
+weatherForm.addEventListener("submit",async event =>{
 
-setInterval(() => {
-    const time = new Date();
-    const month = time.getMonth();
-    const date = time.getDate();
-    const day = time.getDay();
-    const hour = time.getHours();
-    const hoursIn12HrFormat = hour >= 13 ? hour %12: hour
-    const minutes = time.getMinutes();
-    const ampm = hour >=12 ? 'PM' : 'AM'
+    event.preventDefault();
 
-    timeEl.innerHTML = (hoursIn12HrFormat < 10? '0'+hoursIn12HrFormat : hoursIn12HrFormat) + ':' + (minutes < 10? '0'+minutes: minutes)+ ' ' + `<span id="am-pm">${ampm}</span>`
+    const city=cityInput.value;
+    if(city){
+        try{
+            
+            const weatherData = await getWeatherData(city);
+            displayWeatherInfo(weatherData);
 
-    dateEl.innerHTML = days[day] + ', ' + date+ ' ' + months[month]
+        }catch(error){
+            console.error(error);
+            displayError(error);
+        }
 
-}, 1000);
+    }else{
+        displayError("Please enter a city");
+    }
 
-getWeatherData()
-function getWeatherData () {
-    navigator.geolocation.getCurrentPosition((success) => {
-        
-        let {latitude, longitude } = success.coords;
+});
 
-        fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=hourly,minutely&units=metric&appid=${API_KEY}`).then(res => res.json()).then(data => {
+async function getWeatherData(city){
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apikey}`;
 
-        console.log(data)
-        showWeatherData(data);
-        })
+    const response = await fetch(apiUrl);
 
-    })
+    console.log(response);
+
+    if(!response.ok){
+        throw new Error("Could not fetch weather data");
+    }
+
+    return await response.json();
 }
 
-function showWeatherData (data){
-    let {humidity, pressure, sunrise, sunset, wind_speed} = data.current;
+function displayWeatherInfo(data){
+    const {name : city, 
+            main: {temp,humidity}, 
+            weather: [{description, id}]} = data;
 
-    timezone.innerHTML = data.timezone;
-    countryEl.innerHTML = data.lat + 'N ' + data.lon+'E'
+    card.textContent= "";
+    card.style.display = "flex";
 
-    currentWeatherItemsEl.innerHTML = 
-    `<div class="weather-item">
-        <div>Humidity</div>
-        <div>${humidity}%</div>
-    </div>
-    <div class="weather-item">
-        <div>Pressure</div>
-        <div>${pressure}</div>
-    </div>
-    <div class="weather-item">
-        <div>Wind Speed</div>
-        <div>${wind_speed}</div>
-    </div>
+    const cityDisplay=document.createElement("h1");
+    const tempDisplay=document.createElement("p");
+    const humidityDisplay=document.createElement("p");
+    const descDisplay=document.createElement("p");
+    const weatherEmoji=document.createElement("p");
 
-    <div class="weather-item">
-        <div>Sunrise</div>
-        <div>${window.moment(sunrise * 1000).format('HH:mm a')}</div>
-    </div>
-    <div class="weather-item">
-        <div>Sunset</div>
-        <div>${window.moment(sunset*1000).format('HH:mm a')}</div>
-    </div>
+    cityDisplay.textContent= city;
+    tempDisplay.textContent = `${((temp - 273.15)*(9/5) + 32).toFixed(1)}°C`;
+    humidityDisplay.textContent=`Humidity: ${humidity}%`;
+    descDisplay.textContent=description;
+    weatherEmoji.textContent = getWeatherEmoji(id);
+
+    cityDisplay.classList.add("cityDisplay")
+    tempDisplay.classList.add("temperatureDisplay")
+    humidityDisplay.classList.add("humidityDisplay")
+    descDisplay.classList.add("descDisplay")
+    weatherEmoji.classList.add("weatherEmoji")
     
-    
-    `;
+    card.appendChild(cityDisplay);
+    card.appendChild(tempDisplay);
+    card.appendChild(humidityDisplay);
+    card.appendChild(descDisplay)
+    card.appendChild(weatherEmoji)
+}
 
-    let otherDayForcast = ''
-    data.daily.forEach((day, idx) => {
-        if(idx == 0){
-            currentTempEl.innerHTML = `
-            <img src="http://openweathermap.org/img/wn//${day.weather[0].icon}@4x.png" alt="weather icon" class="w-icon">
-            <div class="other">
-                <div class="day">${window.moment(day.dt*1000).format('dddd')}</div>
-                <div class="temp">Night - ${day.temp.night}&#176;C</div>
-                <div class="temp">Day - ${day.temp.day}&#176;C</div>
-            </div>
-            
-            `
-        }else{
-            otherDayForcast += `
-            <div class="weather-forecast-item">
-                <div class="day">${window.moment(day.dt*1000).format('ddd')}</div>
-                <img src="http://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png" alt="weather icon" class="w-icon">
-                <div class="temp">Night - ${day.temp.night}&#176;C</div>
-                <div class="temp">Day - ${day.temp.day}&#176;C</div>
-            </div>
-            
-            `
-        }
-    })
+function getWeatherEmoji(weatherId){
 
+    switch(true){
+        case(weatherId >= 200 && weatherId<300):
+            return `🌧`;
+        case(weatherId >= 300 && weatherId<400):
+            return `🌧`;
+        case(weatherId >= 500 && weatherId<600):
+            return `🌧`;
+        case(weatherId >= 600 && weatherId<700):
+            return "❄";
+        case(weatherId >= 700 && weatherId<800):
+            return "🌫";
+        case(weatherId === 800):
+            return "☀";
+        case(weatherId >= 801 && weatherId<810):
+            return "☁";
+        default :
+            return "❓";
+    }
 
-    weatherForecastEl.innerHTML = otherDayForcast;
+}
+
+function displayError(message){
+
+        const errorDisplay = document.createElement("p");
+        errorDisplay.textContent = message;
+        errorDisplay.classList.add("errorDisplay");
+
+        card.textContent="";
+        card.style.display="flex";
+        card.appendChild(errorDisplay);
 }
